@@ -1,0 +1,44 @@
+@startuml
+actor Eater as eater
+participant "Eater App" as eaterApp
+participant "API Gateway" as apiGateway
+participant "Order Orchestration Service" as orderOrchestrator
+participant "Order Service" as orderService
+participant "Payment Service" as paymentService
+participant "Restaurant Service" as restaurantService
+database "Orders DB" as ordersDB
+database "Menu DB" as menuDB
+participant "Payment System" as paymentSystem
+
+eater -> eaterApp: Browse Menu
+eaterApp -> apiGateway: Fetch Menu
+apiGateway -> "Menu Service": Get Menu Items
+"Menu Service" -> menuDB: Query Menu Data
+menuDB --> "Menu Service": Menu Data
+"Menu Service" --> apiGateway: Menu Items
+apiGateway --> eaterApp: Menu Data
+eaterApp --> eater: Display Menu
+
+eater -> eaterApp: Select Items, Place Order
+eaterApp -> apiGateway: Submit Order
+apiGateway -> orderOrchestrator: Place Order Request
+orderOrchestrator -> orderService: Create New Order
+orderService -> ordersDB: Store Order Details
+ordersDB --> orderService: Order Created
+
+orderOrchestrator -> paymentService: Process Payment
+paymentService -> paymentSystem: Charge Payment
+paymentSystem --> paymentService: Payment Success
+paymentService --> orderOrchestrator: Payment Success
+
+orderOrchestrator -> restaurantService: Notify Restaurant of New Order
+restaurantService -> "Restaurant App": Display Order for Preparation
+
+orderOrchestrator -> ordersDB: Update Order Status (Confirmed)
+ordersDB --> orderOrchestrator: Status Updated
+
+orderOrchestrator --> apiGateway: Order Confirmation
+apiGateway --> eaterApp: Order Confirmation
+eaterApp --> eater: Display Order Confirmation
+
+@enduml
